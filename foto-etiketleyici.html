@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kontakt — Fotoğraf Adlandırma &amp; Büyütme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#18160f;
+    --panel:#211e17;
+    --panel-2:#28241b;
+    --border:#3c362a;
+    --amber:#e8a33d;
+    --amber-dim:#a6742b;
+    --text:#f1ece0;
+    --muted:#9a9082;
+    --danger:#c25c4a;
+    --ok:#7ea87a;
+    --radius:3px;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#18160f; --panel:#211e17; --panel-2:#28241b; --border:#3c362a; --text:#f1ece0; --muted:#9a9082;
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:36px 20px 80px;
+  }
+  header.top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:1px solid var(--border);
+    padding-bottom:18px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  header.top h1{
+    font-size:22px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header.top .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.02em;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:320px 1fr;
+    gap:24px;
+  }
+  @media (max-width:840px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .panel + .panel{margin-top:16px;}
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .field .hint{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:5px;
+    line-height:1.4;
+  }
+  input[type="text"], input[type="number"], select{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:var(--radius);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    outline:none;
+  }
+  input[type="text"]:focus, input[type="number"]:focus, select:focus{
+    border-color:var(--amber);
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .dropzone{
+    border:1.5px dashed var(--border);
+    border-radius:var(--radius);
+    padding:26px 16px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--amber);
+    background:rgba(232,163,61,0.06);
+  }
+  .dropzone .icon{font-size:22px;margin-bottom:6px;}
+  .dropzone .main{font-size:13px;color:var(--text);}
+  .dropzone .sub{font-size:11px;color:var(--muted);margin-top:4px;}
+  input[type="file"]{display:none;}
+
+  .checkrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    color:var(--text);
+  }
+  .checkrow input{width:auto;}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    border-radius:var(--radius);
+    border:1px solid transparent;
+    padding:10px 14px;
+    cursor:pointer;
+    transition:opacity .15s ease, transform .05s ease;
+  }
+  button:active{transform:translateY(1px);}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-primary{
+    background:var(--amber);
+    color:#1b1710;
+    width:100%;
+  }
+  .btn-primary:hover:not(:disabled){opacity:.92;}
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+  .btn-ghost:hover{border-color:var(--amber);}
+  .btn-icon{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--muted);
+    padding:4px 7px;
+    font-size:12px;
+    line-height:1;
+  }
+  .btn-icon:hover{color:var(--text);border-color:var(--amber);}
+
+  .list-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .list-head h2{
+    font-size:14px;
+    margin:0;
+    font-weight:600;
+  }
+  .list-head .count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .items{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .item{
+    display:grid;
+    grid-template-columns:52px 1fr auto;
+    align-items:center;
+    gap:12px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:8px 10px;
+  }
+  .item.dragging{opacity:.4;}
+  .item img{
+    width:52px;
+    height:52px;
+    object-fit:cover;
+    border-radius:2px;
+    background:#000;
+    display:block;
+  }
+  .item .meta{min-width:0;}
+  .item .newname{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--amber);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .item .oldname{
+    font-size:11px;
+    color:var(--muted);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .item .dims{
+    font-size:11px;
+    color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .item .actions{
+    display:flex;
+    gap:4px;
+  }
+  .empty{
+    padding:50px 20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .progress-wrap{
+    margin-top:16px;
+    display:none;
+  }
+  .progress-wrap.show{display:block;}
+  .progress-bar-bg{
+    height:6px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .progress-bar-fill{
+    height:100%;
+    width:0%;
+    background:var(--amber);
+    transition:width .15s ease;
+  }
+  .progress-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:6px;
+  }
+
+  .section-title{
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    text-transform:none;
+    margin:0 0 12px 0;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Kontakt</h1>
+    <div class="tag">toplu adlandırma · büyütme</div>
+  </header>
+
+  <div class="grid">
+
+    <!-- LEFT: controls -->
+    <div>
+      <div class="panel">
+        <div class="section-title">Adlandırma</div>
+        <div class="field">
+          <label for="baseName">Başlık (örn. lca)</label>
+          <input type="text" id="baseName" value="lca" placeholder="lca">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="startNum">Başlangıç no</label>
+            <input type="number" id="startNum" value="1" min="0">
+          </div>
+          <div class="field">
+            <label for="padding">Basamak</label>
+            <select id="padding">
+              <option value="0">1, 2, 3</option>
+              <option value="2">01, 02, 03</option>
+              <option value="3">001, 002</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">Büyütme (Upscale)</div>
+        <div class="field">
+          <label for="scaleMode">Boyutlandırma</label>
+          <select id="scaleMode">
+            <option value="none">Orijinal boyut — yeniden kodlama yok</option>
+            <option value="1.5">1.5× büyüt</option>
+            <option value="2" selected>2× büyüt</option>
+            <option value="3">3× büyüt</option>
+            <option value="4">4× büyüt</option>
+            <option value="manual">Elle boyut gir</option>
+          </select>
+        </div>
+        <div class="row2" id="manualDims" style="display:none;">
+          <div class="field">
+            <label for="manualW">Genişlik (px)</label>
+            <input type="number" id="manualW" placeholder="ör. 3000" min="1">
+          </div>
+          <div class="field">
+            <label for="manualH">Yükseklik (px)</label>
+            <input type="number" id="manualH" placeholder="ör. 2000" min="1">
+          </div>
+        </div>
+        <div class="field checkrow">
+          <input type="checkbox" id="keepRatio" checked>
+          <label for="keepRatio" style="margin:0;">En-boy oranını koru (elle boyutta)</label>
+        </div>
+        <div class="field checkrow">
+          <input type="checkbox" id="sharpen" checked>
+          <label for="sharpen" style="margin:0;">Netleştirme uygula (bulanıklığı azaltır)</label>
+        </div>
+        <div class="field">
+          <label for="format">Çıktı formatı</label>
+          <select id="format">
+            <option value="png" selected>PNG — kayıpsız</option>
+            <option value="jpeg">JPEG — küçük dosya</option>
+          </select>
+        </div>
+        <div class="field" id="qualityField" style="display:none;">
+          <label for="quality">JPEG kalitesi: <span id="qualityVal">95</span>%</label>
+          <input type="range" id="quality" min="60" max="100" value="95" style="padding:0;">
+        </div>
+        <div class="hint">Büyütme, görüntüyü küçük adımlarla (en fazla 2×'er) kademeli olarak ölçekler; tek seferde büyük oranda büyütmeye göre çok daha az bulanıklık oluşturur. "Orijinal boyut" seçiliyse dosya hiç yeniden kodlanmaz, kalite %100 korunur.</div>
+      </div>
+
+      <div class="panel">
+        <button class="btn-primary" id="processBtn" disabled>Adlandır ve İndir (.zip)</button>
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+          <div class="progress-label" id="progressLabel">Hazırlanıyor…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: file list -->
+    <div>
+      <div class="panel">
+        <div class="dropzone" id="dropzone">
+          <div class="icon">＋</div>
+          <div class="main">Fotoğrafları buraya sürükle ya da tıklayıp seç</div>
+          <div class="sub">Birden fazla dosya seçebilirsin — JPG, PNG, WEBP</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple>
+      </div>
+
+      <div class="panel">
+        <div class="list-head">
+          <h2>Sıra</h2>
+          <span class="count" id="itemCount">0 dosya</span>
+        </div>
+        <div id="itemsContainer">
+          <div class="empty" id="emptyState">Henüz fotoğraf eklenmedi. Yukarıdan ekleyince burada sırayla görünecekler — sırayı oklarla veya sürükleyerek değiştirebilirsin.</div>
+          <div class="items" id="itemsList"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  let items = []; // {id, file, url, ext, width, height}
+  let seq = 0;
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const itemsList = document.getElementById('itemsList');
+  const emptyState = document.getElementById('emptyState');
+  const itemCount = document.getElementById('itemCount');
+  const baseNameInput = document.getElementById('baseName');
+  const startNumInput = document.getElementById('startNum');
+  const paddingSelect = document.getElementById('padding');
+  const scaleMode = document.getElementById('scaleMode');
+  const manualDims = document.getElementById('manualDims');
+  const manualW = document.getElementById('manualW');
+  const manualH = document.getElementById('manualH');
+  const keepRatio = document.getElementById('keepRatio');
+  const sharpenChk = document.getElementById('sharpen');
+  const formatSelect = document.getElementById('format');
+  const qualityField = document.getElementById('qualityField');
+  const qualityInput = document.getElementById('quality');
+  const qualityVal = document.getElementById('qualityVal');
+  const processBtn = document.getElementById('processBtn');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressFill = document.getElementById('progressFill');
+  const progressLabel = document.getElementById('progressLabel');
+
+  scaleMode.addEventListener('change', () => {
+    manualDims.style.display = scaleMode.value === 'manual' ? 'grid' : 'none';
+    updatePreviewNames();
+  });
+  formatSelect.addEventListener('change', () => {
+    qualityField.style.display = formatSelect.value === 'jpeg' ? 'block' : 'none';
+  });
+  qualityInput.addEventListener('input', () => { qualityVal.textContent = qualityInput.value; });
+  [baseNameInput, startNumInput, paddingSelect].forEach(el=>{
+    el.addEventListener('input', updatePreviewNames);
+  });
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    handleFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener('change', e => {
+    handleFiles(e.target.files);
+    fileInput.value = '';
+  });
+
+  function handleFiles(fileList){
+    const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+    files.forEach(file => {
+      const id = 'f' + (seq++);
+      const url = URL.createObjectURL(file);
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const item = { id, file, url, ext, width:null, height:null };
+      items.push(item);
+      const img = new Image();
+      img.onload = () => {
+        item.width = img.naturalWidth;
+        item.height = img.naturalHeight;
+        renderItem(item);
+      };
+      img.src = url;
+    });
+    renderAll();
+  }
+
+  function renderAll(){
+    itemsList.innerHTML = '';
+    emptyState.style.display = items.length ? 'none' : 'block';
+    itemCount.textContent = items.length + (items.length===1 ? ' dosya' : ' dosya');
+    processBtn.disabled = items.length === 0;
+    items.forEach(renderItem);
+    updatePreviewNames();
+  }
+
+  function renderItem(item){
+    let row = document.getElementById('row-' + item.id);
+    if (!row){
+      row = document.createElement('div');
+      row.className = 'item';
+      row.id = 'row-' + item.id;
+      row.draggable = true;
+      row.dataset.id = item.id;
+      row.innerHTML = `
+        <img src="${item.url}" alt="">
+        <div class="meta">
+          <div class="newname"></div>
+          <div class="oldname"></div>
+          <div class="dims"></div>
+        </div>
+        <div class="actions">
+          <button class="btn-icon" data-act="up" title="Yukarı">↑</button>
+          <button class="btn-icon" data-act="down" title="Aşağı">↓</button>
+          <button class="btn-icon" data-act="del" title="Kaldır">✕</button>
+        </div>`;
+      itemsList.appendChild(row);
+
+      row.addEventListener('dragstart', () => row.classList.add('dragging'));
+      row.addEventListener('dragend', () => { row.classList.remove('dragging'); syncOrderFromDOM(); });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        const dragging = itemsList.querySelector('.dragging');
+        if (!dragging || dragging === row) return;
+        const rect = row.getBoundingClientRect();
+        const before = (e.clientY - rect.top) < rect.height/2;
+        itemsList.insertBefore(dragging, before ? row : row.nextSibling);
+      });
+
+      row.querySelector('[data-act="up"]').addEventListener('click', () => move(item.id, -1));
+      row.querySelector('[data-act="down"]').addEventListener('click', () => move(item.id, 1));
+      row.querySelector('[data-act="del"]').addEventListener('click', () => remove(item.id));
+    }
+    row.querySelector('.oldname').textContent = item.file.name;
+    row.querySelector('.dims').textContent = item.width ? `${item.width}×${item.height}px` : '…';
+  }
+
+  function syncOrderFromDOM(){
+    const ids = Array.from(itemsList.children).map(r => r.dataset.id);
+    items.sort((a,b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+    updatePreviewNames();
+  }
+
+  function move(id, dir){
+    const idx = items.findIndex(i => i.id === id);
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= items.length) return;
+    const tmp = items[idx];
+    items[idx] = items[newIdx];
+    items[newIdx] = tmp;
+    renderAll();
+  }
+
+  function remove(id){
+    items = items.filter(i => i.id !== id);
+    const row = document.getElementById('row-' + id);
+    if (row) row.remove();
+    renderAll();
+  }
+
+  function buildNames(){
+    const base = (baseNameInput.value.trim() || 'foto');
+    const start = parseInt(startNumInput.value, 10) || 0;
+    const pad = parseInt(paddingSelect.value, 10) || 0;
+    const resizing = scaleMode.value !== 'none';
+    const outExt = resizing ? (formatSelect.value === 'jpeg' ? 'jpg' : 'png') : null;
+    return items.map((item, i) => {
+      let num = String(start + i);
+      if (pad) num = num.padStart(pad, '0');
+      const ext = outExt || item.ext;
+      return `${base}${num}.${ext}`;
+    });
+  }
+
+  function updatePreviewNames(){
+    const names = buildNames();
+    items.forEach((item, i) => {
+      const row = document.getElementById('row-' + item.id);
+      if (row) row.querySelector('.newname').textContent = names[i];
+    });
+  }
+
+  // --- Image processing ---
+
+  function loadImageBitmap(file){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  function computeTargetSize(srcW, srcH){
+    const mode = scaleMode.value;
+    if (mode === 'none') return { w: srcW, h: srcH };
+    if (mode === 'manual'){
+      let w = parseInt(manualW.value, 10);
+      let h = parseInt(manualH.value, 10);
+      if (keepRatio.checked){
+        if (w && !h) h = Math.round(w * srcH / srcW);
+        else if (h && !w) w = Math.round(h * srcW / srcH);
+        else if (w && h){
+          // fit within box keeping ratio
+          const scale = Math.min(w / srcW, h / srcH);
+          w = Math.round(srcW * scale);
+          h = Math.round(srcH * scale);
+        }
+      }
+      if (!w) w = srcW;
+      if (!h) h = srcH;
+      return { w, h };
+    }
+    const factor = parseFloat(mode);
+    return { w: Math.round(srcW * factor), h: Math.round(srcH * factor) };
+  }
+
+  // Progressive step-scaling: never jump more than 2x per canvas pass.
+  // This keeps the resampling kernel local at each step, which the browser's
+  // bilinear/bicubic implementation handles with far less blur/ringing than
+  // one huge single-pass stretch.
+  function stepScale(img, targetW, targetH){
+    let curCanvas = document.createElement('canvas');
+    curCanvas.width = img.naturalWidth;
+    curCanvas.height = img.naturalHeight;
+    let ctx = curCanvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    let curW = img.naturalWidth;
+    let curH = img.naturalHeight;
+
+    const growing = targetW >= curW;
+
+    while (true){
+      const ratioW = targetW / curW;
+      const ratioH = targetH / curH;
+      const doneW = growing ? curW >= targetW : curW <= targetW;
+      const doneH = growing ? curH >= targetH : curH <= targetH;
+      if (doneW && doneH) break;
+
+      let stepRatioW = growing ? Math.min(ratioW, 2) : Math.max(ratioW, 0.5);
+      let stepRatioH = growing ? Math.min(ratioH, 2) : Math.max(ratioH, 0.5);
+
+      let nextW = Math.round(curW * stepRatioW);
+      let nextH = Math.round(curH * stepRatioH);
+      // snap to target if close (avoid infinite tiny steps)
+      if (growing ? nextW >= targetW : nextW <= targetW) nextW = targetW;
+      if (growing ? nextH >= targetH : nextH <= targetH) nextH = targetH;
+
+      const nextCanvas = document.createElement('canvas');
+      nextCanvas.width = nextW;
+      nextCanvas.height = nextH;
+      const nctx = nextCanvas.getContext('2d');
+      nctx.imageSmoothingEnabled = true;
+      nctx.imageSmoothingQuality = 'high';
+      nctx.drawImage(curCanvas, 0, 0, curW, curH, 0, 0, nextW, nextH);
+
+      curCanvas = nextCanvas;
+      curW = nextW;
+      curH = nextH;
+      ctx = nctx;
+    }
+    return curCanvas;
+  }
+
+  // Light unsharp-mask style sharpening to counter softness introduced by resampling.
+  function sharpenCanvas(canvas, amount){
+    const w = canvas.width, h = canvas.height;
+    const ctx = canvas.getContext('2d');
+    const src = ctx.getImageData(0, 0, w, h);
+    const srcData = src.data;
+    const out = ctx.createImageData(w, h);
+    const outData = out.data;
+
+    // 3x3 sharpen kernel, strength-scaled
+    const k = amount;
+    const kernel = [
+      0, -k, 0,
+      -k, 1 + 4*k, -k,
+      0, -k, 0
+    ];
+
+    for (let y = 0; y < h; y++){
+      for (let x = 0; x < w; x++){
+        const idx = (y * w + x) * 4;
+        if (x === 0 || y === 0 || x === w-1 || y === h-1){
+          outData[idx] = srcData[idx];
+          outData[idx+1] = srcData[idx+1];
+          outData[idx+2] = srcData[idx+2];
+          outData[idx+3] = srcData[idx+3];
+          continue;
+        }
+        for (let c = 0; c < 3; c++){
+          let sum = 0;
+          let k_i = 0;
+          for (let ky = -1; ky <= 1; ky++){
+            for (let kx = -1; kx <= 1; kx++){
+              const nIdx = ((y+ky) * w + (x+kx)) * 4 + c;
+              sum += srcData[nIdx] * kernel[k_i++];
+            }
+          }
+          outData[idx+c] = Math.max(0, Math.min(255, sum));
+        }
+        outData[idx+3] = srcData[idx+3];
+      }
+    }
+    ctx.putImageData(out, 0, 0);
+    return canvas;
+  }
+
+  function canvasToBlob(canvas, format, quality){
+    return new Promise(resolve => {
+      const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      canvas.toBlob(blob => resolve(blob), mime, format === 'jpeg' ? quality : undefined);
+    });
+  }
+
+  processBtn.addEventListener('click', async () => {
+    if (!items.length) return;
+    processBtn.disabled = true;
+    progressWrap.classList.add('show');
+    progressFill.style.width = '0%';
+
+    const zip = new JSZip();
+    const names = buildNames();
+    const resizing = scaleMode.value !== 'none';
+    const doSharpen = sharpenChk.checked && resizing;
+    const format = formatSelect.value;
+    const quality = parseInt(qualityInput.value, 10) / 100;
+
+    for (let i = 0; i < items.length; i++){
+      const item = items[i];
+      const name = names[i];
+      progressLabel.textContent = `İşleniyor: ${name} (${i+1}/${items.length})`;
+      progressFill.style.width = Math.round(((i) / items.length) * 100) + '%';
+      await new Promise(r => setTimeout(r, 0)); // let UI paint
+
+      if (!resizing){
+        // No re-encode at all: byte-for-byte original quality preserved.
+        zip.file(name, item.file);
+      } else {
+        const img = await loadImageBitmap(item.file);
+        const { w, h } = computeTargetSize(img.naturalWidth, img.naturalHeight);
+        let canvas = stepScale(img, w, h);
+        if (doSharpen){
+          // gentle amount; scales down slightly for big upscales to avoid haloing
+          const factor = (w * h) / (img.naturalWidth * img.naturalHeight);
+          const amt = factor > 4 ? 0.18 : 0.28;
+          canvas = sharpenCanvas(canvas, amt);
+        }
+        const blob = await canvasToBlob(canvas, format, quality);
+        zip.file(name, blob);
+      }
+    }
+
+    progressFill.style.width = '100%';
+    progressLabel.textContent = 'Zip oluşturuluyor…';
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const base = (baseNameInput.value.trim() || 'foto');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = `${base}-fotograflar.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    progressLabel.textContent = 'Tamamlandı — indirme başladı.';
+    setTimeout(() => {
+      progressWrap.classList.remove('show');
+      processBtn.disabled = items.length === 0;
+    }, 1800);
+  });
+
+})();
+</script>
+</body>
+</html>
