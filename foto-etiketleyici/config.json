@@ -1,0 +1,49 @@
+{
+  "naming": {
+    "defaultBaseName": "lca",
+    "defaultStartNumber": 1,
+    "paddingOptions": [
+      { "value": 0, "label": "1, 2, 3" },
+      { "value": 2, "label": "01, 02, 03" },
+      { "value": 3, "label": "001, 002" }
+    ]
+  },
+  "upscale": {
+    "scaleOptions": [
+      { "value": "none", "label": "Orijinal boyut — yeniden kodlama yok" },
+      { "value": "1.5", "label": "1.5× büyüt" },
+      { "value": "2", "label": "2× büyüt", "default": true },
+      { "value": "3", "label": "3× büyüt" },
+      { "value": "4", "label": "4× büyüt" },
+      { "value": "manual", "label": "Elle boyut gir" }
+    ],
+    "keepRatioDefault": true,
+    "sharpenDefault": true,
+    "maxStepFactor": 2,
+    "sharpenAmount": {
+      "normal": 0.28,
+      "largeUpscale": 0.18,
+      "largeUpscaleThreshold": 4
+    }
+  },
+  "output": {
+    "formats": [
+      { "value": "png", "label": "PNG — kayıpsız", "default": true },
+      { "value": "jpeg", "label": "JPEG — küçük dosya" }
+    ],
+    "jpegQualityDefault": 95,
+    "jpegQualityMin": 60,
+    "jpegQualityMax": 100
+  },
+  "fileInput": {
+    "accept": "image/*",
+    "multiple": true
+  },
+  "zip": {
+    "filenameSuffix": "-fotograflar.zip"
+  },
+  "externalLibraries": {
+    "jszip": "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
+    "fonts": "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
+  }
+}
